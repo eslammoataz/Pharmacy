@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "target": "es2016",
+    "outDir": "./dist",
+    "baseUrl": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "typeRoots": ["node_modules/@types"],
+  "exclude": ["node_modules"]
+}
