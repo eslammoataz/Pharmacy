@@ -1,13 +1,12 @@
 
 import { IsArray, IsString } from 'class-validator';
 
-class CreateUserDto {
-    @IsString()
-    name: string;
+class CreateProjectDto {
     @IsString()
     email: string;
     @IsString()
     password: string;
+
 }
 
-export default CreateUserDto;
+export default CreateProjectDto;

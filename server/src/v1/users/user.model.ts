@@ -32,9 +32,10 @@ const UserSchema = new Schema(
 
 // Define User model interface
 interface IUser extends Document {
+  id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  role: 'admin' | 'user' | 'moderator';
+  role: 'admin' | 'customer';
   password: string;
   token?: string;
   passwordResetExpire?: Date;

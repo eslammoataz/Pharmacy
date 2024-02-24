@@ -6,6 +6,10 @@ import * as asyncHandler from 'express-async-handler';
 import Controller from '../../v1/interfaces/controller.interface';
 import UserService from './user.service';
 import expressAsyncHandler = require('express-async-handler');
+import CreateUserDto from './dto/createUser.dto';
+import UpdateUserDto from './dto/update-user.dto';
+
+import validationMiddleware from '../Middlewares/validationMiddleware';
 
 class UserController implements Controller {
   public path = '/users';
@@ -16,9 +20,17 @@ class UserController implements Controller {
   }
   public initializeRoutes() {
     this.router.get(this.path, this.getAllUsers);
-    this.router.post(`${this.path}/createuser`, this.createUser);
-    this.router.patch(`${this.path}/:id`, this.editUser);
-    this.router.delete(`${this.path}/:id`, this.deleteUser);
+    this.router.post(
+      `${this.path}/createuser`,
+      validationMiddleware(CreateUserDto),
+      this.createUser
+    );
+    this.router.patch(
+      `${this.path}/edituser/:id`,
+      validationMiddleware(UpdateUserDto),
+      this.editUser
+    );
+    this.router.delete(`${this.path}/deleteuser/:id`, this.deleteUser);
   }
 
   private getAllUsers = asyncHandler(
@@ -39,7 +51,7 @@ class UserController implements Controller {
       response: express.Response,
       next: express.NextFunction
     ) => {
-      const userData: UserData = request.body;
+      const userData: CreateUserDto = request.body;
       console.log(request.body);
       const createdUser = await this.UserService.createUser(userData);
       response.send(createdUser);
@@ -52,7 +64,7 @@ class UserController implements Controller {
       response: express.Response,
       next: express.NextFunction
     ) => {
-      const userData: IUser = request.body;
+      const userData: UpdateUserDto = request.body;
       const id = request.params.id;
       const updatedUser = await this.UserService.editUser(id, userData);
       if (!updatedUser) return next(new UserNotFoundException(id));

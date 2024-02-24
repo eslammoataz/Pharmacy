@@ -1,7 +1,9 @@
 import UserData from './user.interface';
 import { UserModel, IUser } from './user.model';
 import * as bcrypt from 'bcrypt';
-// import UserWithThatEmailAlreadyExistsException from "../exceptions/UserWithThatEmailAlreadyExistsException";
+import CreateUserDto from './dto/createUser.dto';
+import UpdateUserDto from './dto/update-user.dto';
+import UserWithThatEmailAlreadyExistsException from '../Exceptions/UserWithThatEmailAlreadyExistsException';
 
 class UserService {
   private User = UserModel;
@@ -11,11 +13,11 @@ class UserService {
     return users;
   };
 
-  public createUser = async (UserData: UserData): Promise<IUser> => {
+  public createUser = async (UserData: CreateUserDto): Promise<IUser> => {
     const { password, email } = UserData;
     const userExist = await UserModel.findOne({ email });
     if (userExist) {
-      // throw new UserWithThatEmailAlreadyExistsException(UserData.email);
+      throw new UserWithThatEmailAlreadyExistsException(UserData.email);
     }
     const hashedPw = await bcrypt.hash(password, 12);
     const newUser = await UserModel.create({ ...UserData, password: hashedPw });
@@ -24,7 +26,7 @@ class UserService {
 
   public editUser = async (
     id: string,
-    updateUserData: Partial<IUser>
+    updateUserData: UpdateUserDto
   ): Promise<IUser | null> => {
     const updatedUser = await UserModel.findByIdAndUpdate(id, updateUserData, {
       new: true,

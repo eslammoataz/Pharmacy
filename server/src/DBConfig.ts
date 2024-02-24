@@ -1,16 +1,20 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
 // Define Mongoose connection options
 const MONGO_URI = process.env.MONGODB_URI;
 console.log('INSIDE DB CONFIG ', process.env.MONGODB_URI);
 
 const mongooseOptions: mongoose.ConnectOptions = {};
 
+let db: mongoose.Connection;
+
 // Function to establish Mongoose connection
 export const connectToDatabase = async (): Promise<void> => {
   try {
     await mongoose.connect(MONGO_URI, mongooseOptions);
+    db = mongoose.connection;
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
@@ -26,3 +30,5 @@ export const closeDatabaseConnection = async (): Promise<void> => {
     console.error('Error disconnecting from MongoDB:', error);
   }
 };
+
+export { db };
