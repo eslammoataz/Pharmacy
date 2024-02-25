@@ -1,11 +1,8 @@
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
-
 import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import validationMiddleware from '../Middlewares/validationMiddleware';
 import CreateUserDto from '../users/dto/createUser.dto';
-import User from '../../v1/users/user.interface';
 import UserWithThatEmailAlreadyExistsException from '../Exceptions/UserWithThatEmailAlreadyExistsException';
 import WrongCredentialsException from '../Exceptions/WrongCredentialsException';
 import Controller from '../interfaces/controller.interface';
@@ -14,12 +11,11 @@ import LogInDto from './dto/logIn.dto';
 import TokenData from '../interfaces/tokenData.interface';
 import DataStoredInToken from '../../v1/interfaces/dataStoredInToken.interface';
 import AuthenticationService from './Authentication.Service';
-import UserService from '../users/user.service';
 import forgetPasswordDto from './dto/forgetPassword.dto';
 import * as expressAsyncHandler from 'express-async-handler';
 import userForgetPasswordNotFoundException from '../Exceptions/userForgetPasswordNotFoundException';
-// import sendEmailWhenForgetPassword from './mail/sendEmailWhenForgetPassword';
-// import NotificationService from '../../Notifications/NotificationService';
+import sendEmailWhenForgetPassword from './mail/sendEmailWhenForgetPassword';
+import NotificationService from '../../Notifications/NotificationService';
 import resetPasswordDto from './dto/resetPasswordDto';
 import PasswordNotMatchedException from '../Exceptions/passwordNotMatchedException';
 import resetPasswordTokenNotValid from '../Exceptions/resetPasswordTokenNotValid';
@@ -44,16 +40,16 @@ class AuthenticationController implements Controller {
       validationMiddleware(LogInDto),
       this.loggingIn
     );
-    // this.router.post(
-    //   `${this.path}/forgetpassword`,
-    //   validationMiddleware(forgetPasswordDto),
-    //   this.forgetPassword
-    // );
-    // this.router.post(
-    //   `${this.path}/resetpassword/:token`,
-    //   validationMiddleware(resetPasswordDto),
-    //   this.resetPassword
-    // );
+    this.router.post(
+      `${this.path}/forgetpassword`,
+      validationMiddleware(forgetPasswordDto),
+      this.forgetPassword
+    );
+    this.router.post(
+      `${this.path}/resetpassword/:token`,
+      validationMiddleware(resetPasswordDto),
+      this.resetPassword
+    );
   }
 
   private createToken(user: IUser): TokenData {
@@ -83,7 +79,6 @@ class AuthenticationController implements Controller {
         password: hashedPassword,
       });
       user.password = undefined;
-      console.log(user._id);
       const tokenData = this.createToken(user);
       response.setHeader('Set-Cookie', [this.createCookie(tokenData)]);
       response.send(user);
@@ -100,7 +95,9 @@ class AuthenticationController implements Controller {
     next: express.NextFunction
   ) => {
     const logInData: LogInDto = request.body;
-    const user = await this.user.findOne({ where: { email: logInData.email } });
+    console.log(logInData);
+    const user = await this.user.findOne({ email: logInData.email });
+    console.log(user);
     if (user) {
       const isPasswordMatching = await bcrypt.compare(
         logInData.password,
@@ -119,55 +116,54 @@ class AuthenticationController implements Controller {
     }
   };
 
-  // private forgetPassword = expressAsyncHandler(
-  //   async (
-  //     request: express.Request,
-  //     response: express.Response,
-  //     next: express.NextFunction
-  //   ) => {
-  //     // TODO: Validate the email address and make sure it belongs to a registered user
-  //     const emailUser: forgetPasswordDto = request.body;
-  //     // TODO: Generate a unique token and save it to the user's account
-  //     const { user, resetToken } =
-  //       await this.AuthenticationService.saveTokenToUserAccount(
-  //         emailUser.email
-  //       );
-  //     if (!user)
-  //       return next(new userForgetPasswordNotFoundException(emailUser.email));
-  //     // TODO: Send an email to the user with a link to reset their password
-  //     const mailSender = new sendEmailWhenForgetPassword(
-  //       resetToken
-  //     ).IntializeMail();
-  //     const Notify = new NotificationService();
-  //     Notify.Services = [mailSender];
-  //     Notify.Notify();
+  private forgetPassword = expressAsyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      // TODO: Validate the email address and make sure it belongs to a registered user
+      const emailUser: forgetPasswordDto = request.body;
+      // TODO: Generate a unique token and save it to the user's account
+      const { user, resetToken } =
+        await this.AuthenticationService.saveTokenToUserAccount(
+          emailUser.email
+        );
+      if (!user)
+        return next(new userForgetPasswordNotFoundException(emailUser.email));
+      // TODO: Send an email to the user with a link to reset their password
+      const mailSender = new sendEmailWhenForgetPassword(
+        resetToken
+      ).IntializeMail(user);
+      const Notify = new NotificationService();
+      Notify.Services = [mailSender];
+      Notify.Notify();
+      response.send(user);
+    }
+  );
 
-  //     response.send(user);
-  //   }
-  // );
+  private resetPassword = expressAsyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      const token = request.params.token;
+      if (!token) return next(new resetPasswordTokenNotValid());
 
-  // private resetPassword = expressAsyncHandler(
-  //   async (
-  //     request: express.Request,
-  //     response: express.Response,
-  //     next: express.NextFunction
-  //   ) => {
-  //     const token = request.params.token;
-  //     if (!token) return next(new resetPasswordTokenNotValid());
+      let user = await this.AuthenticationService.checkTokenIsCorrect(token);
 
-  //     let user = await this.AuthenticationService.checkTokenIsCorrect(token);
-
-  //     if (!user) return next(new resetPasswordTokenNotValid());
-  //     const newPassword: resetPasswordDto = request.body;
-  //     const success = await this.AuthenticationService.saveNewPassword(
-  //       newPassword,
-  //       user
-  //     );
-  //     if (!success) return next(new PasswordNotMatchedException());
-  //     user.password = undefined;
-  //     response.send(user);
-  //   }
-  // );
+      if (!user) return next(new resetPasswordTokenNotValid());
+      const newPassword: resetPasswordDto = request.body;
+      const success = await this.AuthenticationService.saveNewPassword(
+        newPassword,
+        user
+      );
+      if (!success) return next(new PasswordNotMatchedException());
+      user.password = undefined;
+      response.send(user);
+    }
+  );
 }
 
 export default AuthenticationController;
