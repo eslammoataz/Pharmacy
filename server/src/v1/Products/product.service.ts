@@ -5,6 +5,8 @@ import UserWithThatEmailAlreadyExistsException from '../Exceptions/UserWithThatE
 import CreateProductDto from './dto/createProductDto';
 import { CategoryModel, ICategory } from '../Category/category.model';
 import CategoryNotFoundException from '../Exceptions/CategoryNotFoundException';
+import UpdateProductDto from './dto/updateProductDto';
+import ProductNotFoundException from '../Exceptions/ProductNotFoundException';
 
 class ProductService {
   private ProductModel = ProductModel;
@@ -29,6 +31,44 @@ class ProductService {
     category.products.push(product.id);
     await category.save();
     return product;
+  };
+
+  public updateProduct = async (
+    productData: UpdateProductDto,
+    productId: string
+  ): Promise<IProduct> => {
+    const categoryId = productData.category;
+
+    let category = await this.CategoryModel.findById(categoryId);
+
+    if (category == null && categoryId != null) {
+      throw new CategoryNotFoundException(categoryId);
+    }
+
+    let product = await this.ProductModel.findByIdAndUpdate(
+      productId,
+      productData,
+      {
+        new: true,
+      }
+    );
+
+    console.log(product);
+
+    if (product == null) {
+      throw new ProductNotFoundException(productId);
+    }
+    return product;
+  };
+
+  public deleteProduct = async (productId: string): Promise<string> => {
+    let product = await this.ProductModel.findByIdAndDelete(productId);
+
+    if (product == null) {
+      throw new ProductNotFoundException(productId);
+    }
+
+    return 'product deleted successfully';
   };
 }
 

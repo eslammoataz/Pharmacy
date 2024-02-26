@@ -26,6 +26,7 @@ class CategoryController implements Controller {
       validationMiddleware(updateCategoryDto),
       this.updateCategory
     );
+    this.router.delete(`${this.path}/deleteCategory/:id`, this.deleteCategory);
   }
 
   private getAllCategories = asyncHandler(
@@ -66,6 +67,19 @@ class CategoryController implements Controller {
         categoryId
       );
       response.send(category);
+    }
+  );
+
+  private deleteCategory = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let categoryId = request.params.id;
+
+      let result = await this.CategoryService.deleteCategory(categoryId);
+      response.send(result);
     }
   );
 }

@@ -5,6 +5,8 @@ import * as asyncHandler from 'express-async-handler';
 import ProductService from './product.service';
 import CreateProductDto from './dto/createProductDto';
 import validationMiddleware from '../Middlewares/validationMiddleware';
+import UpdateProductDto from './dto/updateProductDto';
+import updateCategoryDto from 'v1/Category/dto/updateCategoryDto';
 
 class ProductController implements Controller {
   public path = '/products';
@@ -20,6 +22,12 @@ class ProductController implements Controller {
       validationMiddleware(CreateProductDto),
       this.createProduct
     );
+    this.router.patch(
+      `${this.path}/updateProduct/:id`,
+      validationMiddleware(UpdateProductDto),
+      this.updateProduct
+    );
+    this.router.delete(`${this.path}/deleteProduct/:id`, this.deleteProduct);
   }
 
   private getAllProducts = asyncHandler(
@@ -42,6 +50,34 @@ class ProductController implements Controller {
       let productDto: CreateProductDto = request.body;
 
       let product = await this.ProductService.createProduct(productDto);
+      response.send(product);
+    }
+  );
+
+  private updateProduct = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let productId = request.params.id;
+      let productDto: UpdateProductDto = request.body;
+
+      let product = await this.ProductService.updateProduct(
+        productDto,
+        productId
+      );
+      response.send(product);
+    }
+  );
+  private deleteProduct = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let productId = request.params.id;
+      let product = await this.ProductService.deleteProduct(productId);
       response.send(product);
     }
   );
