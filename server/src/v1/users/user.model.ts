@@ -22,6 +22,11 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
+    cart: {
+      type: Schema.Types.ObjectId,
+      ref: 'Cart',
+    },
+    orders: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
     token: String,
     passwordResetExpire: Date,
   },
@@ -32,7 +37,7 @@ const UserSchema = new Schema(
 
 // Define User model interface
 interface IUser extends Document {
-  id: mongoose.Types.ObjectId;
+  id: string;
   name: string;
   email: string;
   role: 'admin' | 'customer';

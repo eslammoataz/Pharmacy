@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
+import { IProduct } from '../Products/product.model';
 
 const categorySchema = new mongoose.Schema({
   name: {
@@ -9,6 +10,11 @@ const categorySchema = new mongoose.Schema({
   // Other category fields as needed
 });
 
+interface ICategory extends Document {
+  name: string;
+  products?: Types.ObjectId[];
+}
+
 const CategoryModel = mongoose.model('Category', categorySchema);
 
-module.exports = CategoryModel;
+export { CategoryModel, ICategory };
