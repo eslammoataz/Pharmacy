@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
+import { IUser } from '../users/user.model';
 
 const cartItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -13,6 +14,16 @@ const cartSchema = new Schema({
   items: [cartItemSchema],
 });
 
+interface ICartItem extends Document {
+  product: Types.ObjectId;
+  quantity: number;
+}
+
+interface ICart extends Document {
+  customer: Types.ObjectId | IUser;
+  items: ICartItem[];
+}
+
 const CartModel = mongoose.model('Cart', cartSchema);
 
-module.exports = CartModel;
+export { ICartItem, ICart, CartModel };

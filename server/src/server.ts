@@ -4,6 +4,7 @@ import UserController from './v1/users/user.controller';
 import AuthenticationController from './v1/Authentication/Authentication.Controller';
 import ProductController from './v1/Products/product.controller';
 import CategoryController from './v1/Category/category.controller';
+import CartController from './v1/Cart/cart.controller';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ const app = new App(
     new AuthenticationController(),
     new ProductController(),
     new CategoryController(),
+    new CartController(),
   ],
   parseInt(process.env.PORT)
 );
