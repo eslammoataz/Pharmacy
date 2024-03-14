@@ -8,9 +8,28 @@ import updateCategoryDto from './dto/updateCategoryDto';
 class CategoryService {
   private CategoryModel = CategoryModel;
 
-  public getAllCategories = async (): Promise<ICategory[]> => {
-    let categories = await this.CategoryModel.find().populate('products');
+  public getAllCategories = async (): Promise<object[]> => {
+    let categories = await CategoryModel.find().select('-products');
     return categories;
+  };
+
+  public getCategoryById = async (
+    categoryId: string,
+    pageNumber: number,
+    pageSize: number
+  ): Promise<ICategory> => {
+    let category = await this.CategoryModel.findById(categoryId).populate({
+      path: 'products',
+      options: {
+        skip: (pageNumber - 1) * pageSize,
+        limit: pageSize,
+      },
+    });
+
+    if (category == null) {
+      throw new CategoryNotFoundException(categoryId);
+    }
+    return category;
   };
 
   public createCategory = async (

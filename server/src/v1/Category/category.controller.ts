@@ -16,6 +16,7 @@ class CategoryController implements Controller {
   }
   public initializeRoutes() {
     this.router.get(this.path, this.getAllCategories);
+    this.router.get(`${this.path}/:id`, this.getCategoryById);
     this.router.post(
       `${this.path}/createCategory`,
       validationMiddleware(CreateCategoryDto),
@@ -37,6 +38,25 @@ class CategoryController implements Controller {
     ) => {
       let categories = await this.CategoryService.getAllCategories();
       response.send(categories);
+    }
+  );
+
+  private getCategoryById = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let categoryId = request.params.id;
+      let pageSize = parseInt(request.query.pageSize as string);
+      let pageNumber = parseInt(request.query.pageNumber as string);
+
+      let category = await this.CategoryService.getCategoryById(
+        categoryId,
+        pageNumber,
+        pageSize
+      );
+      response.send(category);
     }
   );
 

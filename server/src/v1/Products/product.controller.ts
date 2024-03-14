@@ -17,6 +17,7 @@ class ProductController implements Controller {
   }
   public initializeRoutes() {
     this.router.get(this.path, this.getAllProducts);
+    this.router.get(`${this.path}/:id`, this.getProductById);
     this.router.post(
       `${this.path}/createProduct`,
       validationMiddleware(CreateProductDto),
@@ -28,6 +29,7 @@ class ProductController implements Controller {
       this.updateProduct
     );
     this.router.delete(`${this.path}/deleteProduct/:id`, this.deleteProduct);
+    this.router.get(`${this.path}/search/:searchString`, this.searchProducts);
   }
 
   private getAllProducts = asyncHandler(
@@ -38,6 +40,18 @@ class ProductController implements Controller {
     ) => {
       let products = await this.ProductService.getAllProducts();
       response.send(products);
+    }
+  );
+
+  private getProductById = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let productId = request.params.id;
+      let product = await this.ProductService.getProductById(productId);
+      response.send(product);
     }
   );
 
@@ -70,6 +84,7 @@ class ProductController implements Controller {
       response.send(product);
     }
   );
+
   private deleteProduct = asyncHandler(
     async (
       request: express.Request,
@@ -79,6 +94,18 @@ class ProductController implements Controller {
       let productId = request.params.id;
       let product = await this.ProductService.deleteProduct(productId);
       response.send(product);
+    }
+  );
+
+  private searchProducts = asyncHandler(
+    async (
+      request: express.Request,
+      response: express.Response,
+      next: express.NextFunction
+    ) => {
+      let searchString = request.params.searchString;
+      let products = await this.ProductService.searchProducts(searchString);
+      response.send(products);
     }
   );
 }

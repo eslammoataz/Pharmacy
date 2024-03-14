@@ -17,6 +17,15 @@ class ProductService {
     return products;
   };
 
+  public getProductById = async (productId: string): Promise<IProduct> => {
+    const product = await this.ProductModel.findById(productId);
+    if (product == null) {
+      throw new ProductNotFoundException(productId);
+    }
+
+    return product;
+  };
+
   public createProduct = async (
     productData: CreateProductDto
   ): Promise<IProduct> => {
@@ -69,6 +78,14 @@ class ProductService {
     }
 
     return 'product deleted successfully';
+  };
+
+  public searchProducts = async (search: string): Promise<IProduct[]> => {
+    let products = await this.ProductModel.find({
+      name: { $regex: search, $options: 'i' },
+    });
+
+    return products;
   };
 }
 
